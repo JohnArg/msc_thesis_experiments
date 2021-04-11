@@ -30,7 +30,7 @@ public class NioClient {
         this.sendMessage = ByteBuffer.allocate(messageSize);
         this.recvMessage = ByteBuffer.allocate(messageSize);
         this.latencies = new Latency[iterations];
-        this.fileExporter = new FileExporter("tcp_nio_latencies_client.dat");
+        this.fileExporter = new FileExporter("tcp_nio_hrtt_c.dat");
     }
 
     public void operate(){

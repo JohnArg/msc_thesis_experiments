@@ -38,7 +38,7 @@ public class NioServer {
         for(int i=0; i<latencies.length; i++){
             latencies[i] = new Latency();
         }
-        this.fileExporter = new FileExporter("tcp_nio_latencies_server.dat");
+        this.fileExporter = new FileExporter("tcp_nio_hrtt_s.dat");
         StringBuilder fileHeadings = new StringBuilder();
         fileHeadings.append("# Server processing latencies ===================\r\n");
         fileHeadings.append("# Iterations : "+ iterations + "\r\n");
