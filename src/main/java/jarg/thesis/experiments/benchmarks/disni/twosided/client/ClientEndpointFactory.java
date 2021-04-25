@@ -15,11 +15,14 @@ public class ClientEndpointFactory implements RdmaEndpointFactory<DisniEndpoint>
 
     private RdmaActiveEndpointGroup<DisniEndpoint> endpointGroup;
     private int maxBufferSize;
+    private int maxWRs;
     private TwoSidedClient client;
 
-    public ClientEndpointFactory(RdmaActiveEndpointGroup<DisniEndpoint> endpointGroup, int maxBufferSize,
+    public ClientEndpointFactory(RdmaActiveEndpointGroup<DisniEndpoint> endpointGroup,
+                                 int maxWRs, int maxBufferSize,
                                  TwoSidedClient client) {
         this.endpointGroup = endpointGroup;
+        this.maxWRs = maxWRs;
         this.maxBufferSize = maxBufferSize;
         this.client = client;
     }
@@ -27,7 +30,7 @@ public class ClientEndpointFactory implements RdmaEndpointFactory<DisniEndpoint>
 
     @Override
     public DisniEndpoint createEndpoint(RdmaCmId id, boolean serverSide) throws IOException {
-        return new DisniEndpoint(endpointGroup, id, serverSide, maxBufferSize,
+        return new DisniEndpoint(endpointGroup, id, serverSide, maxWRs, maxBufferSize,
                 new ClientCQNotificationHandler(client));
     }
 }

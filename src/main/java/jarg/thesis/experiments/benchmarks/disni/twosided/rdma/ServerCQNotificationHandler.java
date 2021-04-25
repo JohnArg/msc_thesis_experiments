@@ -38,6 +38,7 @@ public class ServerCQNotificationHandler implements WorkCompletionHandler {
     @Override
     public void handleCqEvent(IbvWC wc) {
         int wcOpcode = wc.getOpcode();
+        int wrId = (int) wc.getWr_id();
 
         if (wcOpcode == IbvWC.IbvWcOpcode.IBV_WC_RECV.getOpcode()) {
 
@@ -46,18 +47,11 @@ public class ServerCQNotificationHandler implements WorkCompletionHandler {
             latency.recordTimeStart();
             // echo the received message => copy to send buffer
             communicationsEndpoint.sendBuffer.clear();
-            for(int j=0; j < communicationsEndpoint.receiveBuffer.limit(); j ++){
-                communicationsEndpoint.sendBuffer.put(communicationsEndpoint.receiveBuffer.get());
+            for(int j=0; j < communicationsEndpoint.receiveBuffers[wrId].limit(); j ++){
+                communicationsEndpoint.sendBuffer.put(communicationsEndpoint.receiveBuffers[wrId].get());
             }
             // prepare send buffers
             communicationsEndpoint.sendBuffer.flip();
-            // repost a recv
-            try {
-                communicationsEndpoint.receiveBuffer.clear();
-                communicationsEndpoint.recvSVC.execute();
-            } catch (IOException e) {
-                logger.error("Cannot repost RECV.");
-            }
             // stop recording server processing time --------------------------
             latency.recordTimeEnd();
 
@@ -67,6 +61,13 @@ public class ServerCQNotificationHandler implements WorkCompletionHandler {
             } catch (IOException e) {
                 logger.error("Error in executing SendSVC. Exiting.");
                 twoSidedServer.shutdown();
+            }
+            // repost RECV for reuse
+            try {
+                communicationsEndpoint.receiveBuffers[wrId].clear();
+                communicationsEndpoint.recvSVCs[wrId].execute();
+            } catch (IOException e) {
+                logger.error("Cannot repost RECV.");
             }
             currentIteration ++;
             // shutdown

@@ -19,7 +19,7 @@ public class ClientCQNotificationHandler implements WorkCompletionHandler {
         int wcOpcode = wc.getOpcode();
 
         if (wcOpcode == IbvWC.IbvWcOpcode.IBV_WC_RECV.getOpcode()) {
-            twoSidedClient.notifyOnMessageReception();
+            twoSidedClient.notifyOnMessageReception((int) wc.getWr_id());
         }
     }
 

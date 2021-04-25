@@ -45,7 +45,7 @@ public class TwoSidedServer {
         // Create endpoint
         endpointGroup = new RdmaActiveEndpointGroup<>(config.getTimeout(), config.isPolling(),
                 config.getMaxWRs(), config.getMaxSge(), config.getCqSize());
-        factory = new ServerEndpointFactory(endpointGroup, config.getMaxBufferSize(), this);
+        factory = new ServerEndpointFactory(endpointGroup, config.getMaxWRs(), config.getMaxBufferSize(), this);
         endpointGroup.init(factory);
         serverEndpoint = endpointGroup.createServerEndpoint();
 
@@ -85,11 +85,6 @@ public class TwoSidedServer {
         }catch (Exception e){
             logger.error("Error in closing server endpoint.", e);
         }
-//        try {
-//            endpointGroup.close();
-//        } catch (IOException | InterruptedException e) {
-//            logger.warn("Error in closing endpoint group", e);
-//        }
         logger.info("Server is shut down");
         System.exit(0);
     }

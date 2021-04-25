@@ -87,12 +87,6 @@ public class TwoSidedServer {
         }catch (Exception e){
             logger.error("Error in closing server endpoint.", e);
         }
-
-//        try {
-//            endpointGroup.close();
-//        } catch (IOException | InterruptedException e) {
-//            logger.warn("Error in closing endpoint group", e);
-//        }
         System.exit(0);
     }
 

@@ -59,7 +59,8 @@ public class TwoSidedClient {
         // Create endpoint
         endpointGroup = new RdmaActiveEndpointGroup<>(config.getTimeout(), config.isPolling(),
                 config.getMaxWRs(), config.getMaxSge(), config.getCqSize());
-        factory = new ClientEndpointFactory(endpointGroup, config.getMaxBufferSize(), this);
+        factory = new ClientEndpointFactory(endpointGroup, config.getMaxWRs(),
+                config.getMaxBufferSize(), this);
         endpointGroup.init(factory);
         clientEndpoint = endpointGroup.createEndpoint();
     }
@@ -142,12 +143,14 @@ public class TwoSidedClient {
      * message reception. It also takes care of recording a timestamp for a message reception,
      * checking echoed data for correctness, and exporting recorded latencies to a file, if
      * necessary.
+     *
+     * @param wrId the Work Request Id for the RECV
      */
-    public void notifyOnMessageReception(){
+    public void notifyOnMessageReception(int wrId){
         // set the receive timestamp
         latencies[currentIteration].recordTimeEnd();
         // check correctness of data
-        ByteBuffer receiveBuffer = clientEndpoint.receiveBuffer;
+        ByteBuffer receiveBuffer = clientEndpoint.receiveBuffers[wrId];
         for(int i=0; i < messageBytes.length; i++){
             if(messageBytes[i] != receiveBuffer.get()){
                 logger.error("The echoed message data is incorrect. Exiting..");
@@ -157,7 +160,7 @@ public class TwoSidedClient {
         // repost a RECV
         try {
             receiveBuffer.clear();
-            clientEndpoint.recvSVC.execute();
+            clientEndpoint.recvSVCs[wrId].execute();
         } catch (IOException e) {
             logger.error("Could not repost RECV");
             System.exit(1);

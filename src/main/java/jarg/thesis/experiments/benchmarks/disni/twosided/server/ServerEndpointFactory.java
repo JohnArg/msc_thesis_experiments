@@ -16,12 +16,14 @@ import java.io.IOException;
 public class ServerEndpointFactory implements RdmaEndpointFactory<DisniEndpoint> {
 
     private RdmaActiveEndpointGroup<DisniEndpoint> endpointGroup;
+    private int maxWRs;
     private int maxBufferSize;
     private TwoSidedServer server;
 
     public ServerEndpointFactory(RdmaActiveEndpointGroup<DisniEndpoint> endpointGroup,
-                                 int maxBufferSize, TwoSidedServer server) {
+                                 int maxWRs, int maxBufferSize, TwoSidedServer server) {
         this.endpointGroup = endpointGroup;
+        this.maxWRs = maxWRs;
         this.maxBufferSize = maxBufferSize;
         this.server = server;
     }
@@ -30,7 +32,7 @@ public class ServerEndpointFactory implements RdmaEndpointFactory<DisniEndpoint>
     @Override
     public DisniEndpoint createEndpoint(RdmaCmId id, boolean serverSide) throws IOException {
         ServerCQNotificationHandler notificationHandler = new ServerCQNotificationHandler();
-        DisniEndpoint endpoint = new DisniEndpoint(endpointGroup, id, serverSide, maxBufferSize,
+        DisniEndpoint endpoint = new DisniEndpoint(endpointGroup, id, serverSide, maxWRs, maxBufferSize,
                 notificationHandler);
         notificationHandler.setTwoSidedServer(server);
         notificationHandler.setCommunicationsEndpoint(endpoint);

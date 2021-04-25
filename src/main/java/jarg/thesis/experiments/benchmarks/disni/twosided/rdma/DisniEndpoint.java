@@ -17,22 +17,27 @@ public class DisniEndpoint extends RdmaActiveEndpoint {
     private IbvMr registeredMemoryRegion;
     public ByteBuffer sendBuffer;
     private long sendBufferAddress;
-    public ByteBuffer receiveBuffer;
-    private long receiveBufferAddress;
+    public ByteBuffer[] receiveBuffers;
+    private long[] receiveBufferAddresses;
     private ByteBuffer registeredMemoryBuffer;
+    private int maxWRs;
     private int maxBufferSize;
     private WorkCompletionHandler cqNotificationHandler;
     // SVCs -----------------------------------
     public SVCPostSend sendSVC;                     // A two-sided SEND SVC
-    public SVCPostRecv recvSVC;                     // A two-sided RECV SVC
+    public SVCPostRecv[] recvSVCs;                     // A two-sided RECV SVC
 
 
     public DisniEndpoint(RdmaActiveEndpointGroup<? extends RdmaActiveEndpoint> group, RdmaCmId idPriv,
-                         boolean serverSide, int maxBufferSize,
+                         boolean serverSide, int maxWRs, int maxBufferSize,
                          WorkCompletionHandler cqNotificationHandler) throws IOException {
         super(group, idPriv, serverSide);
         this.maxBufferSize = maxBufferSize;
+        this.maxWRs = maxWRs;
         this.cqNotificationHandler = cqNotificationHandler;
+        this.receiveBufferAddresses = new long[maxWRs];
+        this.receiveBuffers = new ByteBuffer[maxWRs];
+        this.recvSVCs = new SVCPostRecv[maxWRs];
     }
 
     @Override
@@ -43,7 +48,8 @@ public class DisniEndpoint extends RdmaActiveEndpoint {
     }
 
     private void registerCommunicationsMemory(){
-        int bufferArrayBytes = maxBufferSize * 2;
+        // allocate for 1 send buffer and maxWRs recv buffers
+        int bufferArrayBytes = maxBufferSize * (maxWRs + 1);
         registeredMemoryBuffer = ByteBuffer.allocateDirect(bufferArrayBytes);
         // register send buffer -------------------------
         int currentLimit = maxBufferSize;
@@ -52,25 +58,25 @@ public class DisniEndpoint extends RdmaActiveEndpoint {
         registeredMemoryBuffer.position(currentLimit);
         currentLimit += maxBufferSize;
         sendBufferAddress = ((sun.nio.ch.DirectBuffer) sendBuffer).address();
-        // register receive buffer ----------------------
-        registeredMemoryBuffer.limit(currentLimit);
-        receiveBuffer = registeredMemoryBuffer.slice();
-        registeredMemoryBuffer.position(currentLimit);
-        currentLimit += maxBufferSize;
-        receiveBufferAddress = ((sun.nio.ch.DirectBuffer) receiveBuffer).address();
-        registeredMemoryBuffer.clear();
+        // register receive buffers ----------------------
+        for(int i=0; i<maxWRs; i++){
+            registeredMemoryBuffer.limit(currentLimit);
+            receiveBuffers[i] = registeredMemoryBuffer.slice();
+            registeredMemoryBuffer.position(currentLimit);
+            currentLimit += maxBufferSize;
+            receiveBufferAddresses[i] = ((sun.nio.ch.DirectBuffer) receiveBuffers[i]).address();
+        }
     }
 
     private void createSVCs(){
         TwoSidedSendRequest twoSidedSendRequest;
         TwoSidedRecvRequest twoSidedRecvRequest;
         List<IbvSendWR> sendRequests = new ArrayList<>(1);
-        List<IbvRecvWR> recvRequests = new ArrayList<>(1);
 
         // create SEND SVC
         twoSidedSendRequest = new TwoSidedSendRequest(registeredMemoryRegion);
         twoSidedSendRequest.prepareRequest();
-        twoSidedSendRequest.setRequestId(1);
+        twoSidedSendRequest.setRequestId(maxWRs + 1);
         twoSidedSendRequest.setSgeLength(maxBufferSize);
         twoSidedSendRequest.setBufferMemoryAddress(sendBufferAddress);
         sendRequests.add(twoSidedSendRequest.getSendWR());
@@ -80,19 +86,23 @@ public class DisniEndpoint extends RdmaActiveEndpoint {
             e.printStackTrace();
         }
 
-        // create RECV SVC
-        twoSidedRecvRequest = new TwoSidedRecvRequest(registeredMemoryRegion);
-        twoSidedRecvRequest.prepareRequest();
-        twoSidedRecvRequest.setRequestId(2);
-        twoSidedRecvRequest.setSgeLength(maxBufferSize);
-        twoSidedRecvRequest.setBufferMemoryAddress(receiveBufferAddress);
-        recvRequests.add(twoSidedRecvRequest.getRecvWR());
+        // create and pre-post RECVs
+        for(int i=0; i<maxWRs; i++) {
+            List<IbvRecvWR> recvRequests = new ArrayList<>(1);
+            // create RECV SVC
+            twoSidedRecvRequest = new TwoSidedRecvRequest(registeredMemoryRegion);
+            twoSidedRecvRequest.prepareRequest();
+            twoSidedRecvRequest.setRequestId(i);
+            twoSidedRecvRequest.setSgeLength(maxBufferSize);
+            twoSidedRecvRequest.setBufferMemoryAddress(receiveBufferAddresses[i]);
+            recvRequests.add(twoSidedRecvRequest.getRecvWR());
 
-        try {
-            recvSVC = postRecv(recvRequests);
-            recvSVC.execute();
-        } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                recvSVCs[i] = postRecv(recvRequests);
+                recvSVCs[i].execute();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
