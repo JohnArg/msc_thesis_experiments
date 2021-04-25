@@ -3,6 +3,7 @@ package jarg.thesis.experiments.benchmarks.disni.twosided.client;
 import com.ibm.disni.RdmaActiveEndpointGroup;
 import com.ibm.disni.RdmaEndpointFactory;
 import com.ibm.disni.verbs.RdmaCmId;
+import jarg.thesis.experiments.benchmarks.disni.twosided.rdma.ClientCQNotificationHandler;
 import jarg.thesis.experiments.benchmarks.disni.twosided.rdma.DisniEndpoint;
 
 import java.io.IOException;
@@ -26,6 +27,7 @@ public class ClientEndpointFactory implements RdmaEndpointFactory<DisniEndpoint>
 
     @Override
     public DisniEndpoint createEndpoint(RdmaCmId id, boolean serverSide) throws IOException {
-        return new DisniEndpoint(endpointGroup, id, serverSide, maxBufferSize, client);
+        return new DisniEndpoint(endpointGroup, id, serverSide, maxBufferSize,
+                new ClientCQNotificationHandler(client));
     }
 }

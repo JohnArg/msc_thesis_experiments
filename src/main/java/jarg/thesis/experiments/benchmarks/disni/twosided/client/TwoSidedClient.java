@@ -57,7 +57,7 @@ public class TwoSidedClient {
      */
     public void init() throws IOException {
         // Create endpoint
-        endpointGroup =  new RdmaActiveEndpointGroup<>(config.getTimeout(), config.isPolling(),
+        endpointGroup = new RdmaActiveEndpointGroup<>(config.getTimeout(), config.isPolling(),
                 config.getMaxWRs(), config.getMaxSge(), config.getCqSize());
         factory = new ClientEndpointFactory(endpointGroup, config.getMaxBufferSize(), this);
         endpointGroup.init(factory);
@@ -69,6 +69,7 @@ public class TwoSidedClient {
      * @throws Exception
      */
     public void operate() throws Exception {
+        logger.info("Beginning client operation.");
         // Connect to server ------------------------------------
         InetAddress serverIp = InetAddress.getByName(serverHost);
         InetSocketAddress serverSockAddr = new InetSocketAddress(serverIp,
@@ -151,7 +152,6 @@ public class TwoSidedClient {
             if(messageBytes[i] != receiveBuffer.get()){
                 logger.error("The echoed message data is incorrect. Exiting..");
                 shutdown();
-                System.exit(1);
             }
         }
         // repost a RECV
@@ -177,8 +177,14 @@ public class TwoSidedClient {
         try {
             clientEndpoint.close();
         } catch (IOException | InterruptedException e) {
-           logger.error("Could not close endpoint or endpoint group.", e);
+           logger.error("Error in closing endpoint", e);
         }
+        try {
+            endpointGroup.close();
+        } catch (IOException | InterruptedException e) {
+            logger.warn("Error in closing endpoint group", e);
+        }
+
         System.exit(0);
     }
 }

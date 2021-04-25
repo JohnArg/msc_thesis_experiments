@@ -175,8 +175,15 @@ public class TwoSidedClient {
         try {
             clientEndpoint.close();
         } catch (IOException | InterruptedException e) {
-           logger.error("Could not close endpoint or endpoint group.", e);
+           logger.error("Error in closing endpoint.", e);
         }
+
+        try {
+            endpointGroup.close();
+        } catch (IOException | InterruptedException e) {
+            logger.warn("Error in closing endpoint group", e);
+        }
+
         System.exit(0);
     }
 }

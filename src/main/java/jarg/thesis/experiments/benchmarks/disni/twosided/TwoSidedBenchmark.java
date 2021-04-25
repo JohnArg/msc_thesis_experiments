@@ -1,7 +1,8 @@
 package jarg.thesis.experiments.benchmarks.disni.twosided;
 
-import jarg.thesis.experiments.benchmarks.jrcm.twosided.client.TwoSidedClient;
-import jarg.thesis.experiments.benchmarks.jrcm.twosided.server.TwoSidedServer;
+
+import jarg.thesis.experiments.benchmarks.disni.twosided.client.TwoSidedClient;
+import jarg.thesis.experiments.benchmarks.disni.twosided.server.TwoSidedServer;
 import jarg.thesis.experiments.benchmarks.utils.RdmaBenchmarkConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +70,7 @@ public class TwoSidedBenchmark {
                 server.operate();
             } catch (Exception e) {
                 logger.error("Error in operating server.", e);
+                server.shutdown();
             }
         } else if(role.equals("c")) { // run as a client
             TwoSidedClient client = new TwoSidedClient(host, port, benchmarkConfig, iterations);
@@ -77,6 +79,7 @@ public class TwoSidedBenchmark {
                 client.operate();
             } catch (Exception e) {
                 logger.error("Error in operating client.", e);
+                client.shutdown();
             }
         }
     }

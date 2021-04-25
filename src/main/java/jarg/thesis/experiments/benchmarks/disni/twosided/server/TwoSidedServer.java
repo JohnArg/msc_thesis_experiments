@@ -2,11 +2,12 @@ package jarg.thesis.experiments.benchmarks.disni.twosided.server;
 
 import com.ibm.disni.RdmaActiveEndpointGroup;
 import com.ibm.disni.RdmaServerEndpoint;
-import jarg.thesis.experiments.benchmarks.disni.twosided.rdma.DisniServerEndpoint;
+import jarg.thesis.experiments.benchmarks.disni.twosided.rdma.DisniEndpoint;
 import jarg.thesis.experiments.benchmarks.utils.RdmaBenchmarkConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -20,10 +21,10 @@ public class TwoSidedServer {
 
     private String serverHost;
     private String serverPort;
-    private RdmaActiveEndpointGroup<DisniServerEndpoint> endpointGroup;
+    private RdmaActiveEndpointGroup<DisniEndpoint> endpointGroup;
     private ServerEndpointFactory factory;
-    private RdmaServerEndpoint<DisniServerEndpoint> serverEndpoint;
-    private List<DisniServerEndpoint> clients;
+    private RdmaServerEndpoint<DisniEndpoint> serverEndpoint;
+    private List<DisniEndpoint> clients;
     private RdmaBenchmarkConfig config;
     private int iterations;
 
@@ -44,8 +45,7 @@ public class TwoSidedServer {
         // Create endpoint
         endpointGroup = new RdmaActiveEndpointGroup<>(config.getTimeout(), config.isPolling(),
                 config.getMaxWRs(), config.getMaxSge(), config.getCqSize());
-        factory = new ServerEndpointFactory(endpointGroup, config.getMaxBufferSize(), iterations,
-                this);
+        factory = new ServerEndpointFactory(endpointGroup, config.getMaxBufferSize(), this);
         endpointGroup.init(factory);
         serverEndpoint = endpointGroup.createServerEndpoint();
 
@@ -66,7 +66,7 @@ public class TwoSidedServer {
 
         while(true){
             // accept client connection
-            DisniServerEndpoint clientEndpoint = serverEndpoint.accept();
+            DisniEndpoint clientEndpoint = serverEndpoint.accept();
             clients.add(clientEndpoint);
             logger.info("Client connection accepted. Client : "
                     + clientEndpoint.getDstAddr().toString());
@@ -78,13 +78,19 @@ public class TwoSidedServer {
      */
     public void shutdown(){
         try {
-            for (DisniServerEndpoint clientEndpoint : clients) {
+            for (DisniEndpoint clientEndpoint : clients) {
                 clientEndpoint.close();
             }
-            logger.info("Server is shut down");
+            serverEndpoint.close();
         }catch (Exception e){
-            logger.error("Error in shutting down server.", e);
+            logger.error("Error in closing server endpoint.", e);
         }
+//        try {
+//            endpointGroup.close();
+//        } catch (IOException | InterruptedException e) {
+//            logger.warn("Error in closing endpoint group", e);
+//        }
+        logger.info("Server is shut down");
         System.exit(0);
     }
 
@@ -94,5 +100,9 @@ public class TwoSidedServer {
 
     public RdmaBenchmarkConfig getConfig() {
         return config;
+    }
+
+    public RdmaServerEndpoint<DisniEndpoint> getServerEndpoint() {
+        return serverEndpoint;
     }
 }

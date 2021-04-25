@@ -7,6 +7,7 @@ import jarg.thesis.experiments.benchmarks.utils.RdmaBenchmarkConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -81,10 +82,17 @@ public class TwoSidedServer {
             for (ActiveRdmaCommunicator clientEndpoint : clients) {
                 clientEndpoint.close();
             }
+            serverEndpoint.close();
             logger.info("Server is shut down");
         }catch (Exception e){
-            logger.error("Error in shutting down server.", e);
+            logger.error("Error in closing server endpoint.", e);
         }
+
+//        try {
+//            endpointGroup.close();
+//        } catch (IOException | InterruptedException e) {
+//            logger.warn("Error in closing endpoint group", e);
+//        }
         System.exit(0);
     }
 
