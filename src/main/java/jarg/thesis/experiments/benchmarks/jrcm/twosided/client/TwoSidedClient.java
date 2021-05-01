@@ -50,7 +50,7 @@ public class TwoSidedClient {
         this.messageReceived = false;
         this.beginningHeapSize = Runtime.getRuntime().totalMemory();
         this.totalHeapSize = Runtime.getRuntime().maxMemory();
-        this.fileExporter = new FileExporter("jrcm_hrrt_c.dat");
+        this.fileExporter = new FileExporter("jrcm_hrtt_c.dat");
     }
 
     /**

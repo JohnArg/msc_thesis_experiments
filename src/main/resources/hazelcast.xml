@@ -307,11 +307,11 @@
         </raft-algorithm>
     </cp-subsystem>
 
-    <metrics enabled="true">
-        <management-center enabled="true">
+    <metrics enabled="false">
+        <management-center enabled="false">
             <retention-seconds>5</retention-seconds>
         </management-center>
-        <jmx enabled="true"/>
+        <jmx enabled="false"/>
         <collection-frequency-seconds>5</collection-frequency-seconds>
     </metrics>
 
