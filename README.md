@@ -5,7 +5,9 @@
 This project was created for some experiments/benchmarks
 conducted for a MSc Thesis with title 
 "Efficient State Machine Replication With RDMA RPCs in Java".
-It has two parts :
+It is uploaded here for reproducibility purposes.
+
+The project has two parts :
 
 1. Half round trip time (RTT/2) benchmarks.
 2. A [Hazelcast IMDG](https://github.com/JohnArg/hazelcast) server that can 
