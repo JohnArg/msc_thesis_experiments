@@ -9,9 +9,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * <p>
- * This is a client/server benchmark that measures the latency of an RDMA library that
- * extends DiSNI (see IBM) and was developed for a MSc Thesis.
- * For this benchmark, the RDMA library uses <i>two-sided RDMA SEND</i>.
+ * This is a client/server benchmark that measures the latency of RDMA communications
+ * with SEND/RECV with the DiSNI (see IBM) library and was developed for an MSc Thesis.
  * The client sends a message to the server and the server echoes this message back to
  * the client. Timestamps are taken in nanoseconds, in order to compute latencies.
  * This process runs up to a user-defined number of iterations.

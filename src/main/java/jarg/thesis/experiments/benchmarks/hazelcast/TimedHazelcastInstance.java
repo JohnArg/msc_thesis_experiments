@@ -8,6 +8,9 @@ import jarg.thesis.experiments.benchmarks.hazelcast.utils.TimeoutThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Runs a Hazelcast server for a specified period of time.
+ */
 public class TimedHazelcastInstance {
     private static final Logger logger = LoggerFactory.getLogger(TimedHazelcastInstance.class.getSimpleName());
 
